@@ -3043,18 +3043,23 @@ void CNTKToONNXHelper::ProcessInputs(const FunctionPtr& src,
             // TODO: verify - ONNX specifies that ImageScaler always need a batch axis
             inputArgType = ToTypeProto(input.Shape(), true);
         }
-        else if (cntkOpName == "Convolution" && inputIndex == 0)
+        else if (cntkOpName == "Convolution")
         {
-            // CNTK kernel shape can omit the out channel axis if its value equals to 1.
-            // On the other hand, ONNX spec requires out channel axis to be explicitly set. 
-            // w: [O x C x W x H], operand: [N] x [C x W x H].
-            // Thus insert the emulated out channel axis if needed. 
-            const NDShape& operandShape = src->Inputs()[1].Shape();
-            NDShape wShape = input.Shape();
-            if (operandShape.Rank() >= input.Shape().Rank())
-                wShape = wShape.AppendShape({1});
-            assert(wShape.Rank() == (operandShape.Rank() + 1));
-            inputArgType = ToTypeProto(wShape, input.HasBatchAxis(), input.HasSequenceAxis());
+            const size_t ConvWeightIndex = 0u;
+            const size_t ConvOperandIndex = 1u;
+            NDShape inputShape = input.Shape();
+            if (inputIndex == ConvWeightIndex)
+            {
+                // CNTK kernel shape can omit the out channel axis if its value equals to 1.
+                // On the other hand, ONNX spec requires out channel axis to be explicitly set. 
+                // w: [O x C x W x H], operand: [N] x [C x W x H].
+                // Thus insert the emulated out channel axis if needed. 
+                const NDShape& operandShape = src->Inputs()[ConvOperandIndex].Shape();
+                if (operandShape.Rank() >= inputShape.Rank())
+                    inputShape = inputShape.AppendShape({1});
+                assert(inputShape.Rank() == (operandShape.Rank() + 1));
+            }
+            inputArgType = ToTypeProto(inputShape, input.HasBatchAxis(), input.HasSequenceAxis());
         }
         else
         {
