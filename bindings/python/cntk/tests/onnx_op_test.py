@@ -509,6 +509,10 @@ def test_ConvTranspose(tmpdir, dtype, device_id):
         conv_trans_model_with_output_shape = C.convolution_transpose(kernel, x, strides=(2, 2), auto_padding = [False, True, True], output_shape=(16, 16, 16))
         verify_one_input(conv_trans_model_with_output_shape, img, tmpdir, 'ConvTranspose_with_OutputShape_0', device)
 
+        # test without outputShape
+        conv_trans_model_without_output_shape = C.convolution_transpose(kernel, x, strides=(2, 2), auto_padding = [False, True, True])
+        verify_one_input(conv_trans_model_without_output_shape, img, tmpdir, 'ConvTranspose_without_OutputShape_0', device)
+
 # DepthToSpace
 @pytest.mark.parametrize("dtype", DType_Config)
 def test_DepthToSpace(tmpdir, dtype):
